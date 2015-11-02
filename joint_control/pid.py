@@ -35,7 +35,7 @@ class PIDController(object):
         self.e2 = np.zeros(size)
         # ADJUST PARAMETERS BELOW
         delay = 0
-        self.Kp = 0
+        self.Kp = 25
         self.Ki = 0
         self.Kd = 0
         self.y = deque(np.zeros(size), maxlen=delay + 1)
@@ -54,7 +54,28 @@ class PIDController(object):
         '''
         # YOUR CODE HERE
 
-        return self.u
+        # First version, from the slides. It seems different from the ones I saw on the internet.
+        # When only Ki is non zero, u receives only the influence from the new error, and not the sum
+        # of the errors, which would be the integral.
+
+        # e1_new = target - sensor # error
+        #self.u += (self.Kp+self.Ki*self.dt+self.Kd/self.dt)*e1_new \
+        #          - (self.Kp+2*self.Kd/self.dt)*self.e1            \
+        #          + (self.Kd/self.dt)*self.e2
+        #self.e2 = self.e1
+        #self.e1 = e1_new
+
+        # Different version, adapted from the course on coursera.org (linked on the slides) 
+        # e1 corresponds the last error value, and e2 the sum of area of the errors (integral)
+        # the derived part is ((e1_new - e1)/dt)
+        e1_new = target - sensor
+        self.e2 += e1_new 
+        self.u = self.Kp * e1_new + \
+                 self.Ki * self.e2 * self.dt + \
+                 self.Kd * ((e1_new - self.e1)/self.dt)
+        self.e1 = e1_new
+        self.y.append(self.u)
+        return self.y.popleft()
 
 
 class PIDAgent(SparkAgent):
