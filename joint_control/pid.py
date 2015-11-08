@@ -35,9 +35,9 @@ class PIDController(object):
         self.e2 = np.zeros(size)
         # ADJUST PARAMETERS BELOW
         delay = 0
-        self.Kp = 25
-        self.Ki = 0
-        self.Kd = 0
+        self.Kp = 31
+        self.Ki = 0.1
+        self.Kd = 0.2
         self.y = deque(np.zeros(size), maxlen=delay + 1)
 
     def set_delay(self, delay):
@@ -69,10 +69,11 @@ class PIDController(object):
         # e1 corresponds the last error value, and e2 the sum of area of the errors (integral)
         # the derived part is ((e1_new - e1)/dt)
         e1_new = target - sensor
-        self.e2 += e1_new 
         self.u = self.Kp * e1_new + \
                  self.Ki * self.e2 * self.dt + \
                  self.Kd * ((e1_new - self.e1)/self.dt)
+
+        self.e2 += e1_new 
         self.e1 = e1_new
         self.y.append(self.u)
         return self.y.popleft()
