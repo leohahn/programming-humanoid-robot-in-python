@@ -46,6 +46,7 @@ class AngleInterpolationAgent(PIDAgent):
     def angle_interpolation(self, keyframes, perception):
         target_joints = {}
         # YOUR CODE HERE
+        current_time = self.perception.time - self.time_created
         (names, times, keys) = keyframes
         current_time = self.perception.time - self.time_created
         for index, name in enumerate(names):
@@ -72,14 +73,48 @@ class AngleInterpolationAgent(PIDAgent):
         p1 = np.array([t0+dt1, ang0+dAng1])
         p2 = np.array([t1+dt2, ang1+dAng2])
         p3 = np.array([t1, ang1])
-        t = (time - t0)/(t1-t0)
-        #print 'p0 ' + str(p0) + ' p1 ' + str(p1) + ' p2 ' + str(p2) + ' p3 ' + str(p3)
-        #print 't: ' + str(t)
-        bezier = ((1-t)**3)*p0 + \
-                 3*t*((1-t)**2)*p1 + \
-                 3*(t**2)*(1-t)*p2 + \
-                 (t**3)*p3
-        return bezier[1]
+        relative_t = (time - t0)/(t1-t0) * t1
+#        print str(relative_t)
+        control_points = [p0, p1, p2, p3]
+
+        t = self.t_from_x(control_points, relative_t)
+        
+        print str(t)
+        #bezier = ((1-t)**3)*p0 + \
+        #         3*t*((1-t)**2)*p1 + \
+        #         3*(t**2)*(1-t)*p2 + \
+        #         (t**3)*p3
+        return self.y_t(control_points, t) 
+
+    def t_from_x(self, control_points, x):
+        [p0, p1, p2, p3] = control_points
+        current_t = 0.5
+
+        while True:
+            new_x = self.x_t(control_points, current_t)
+#            print 'x: ' + str(x) + ', new x: ' + str(new_x) + 't: ' + str(current_t)
+            if (abs(x - new_x) < 0.03) or current_t == 0:
+                return current_t
+            else:
+                if x > new_x:
+                    current_t = (current_t + 1.)/2.
+                else:
+                    current_t /= 2.
+                continue
+
+    def x_t(self, control_points, t):
+        [p0, p1, p2, p3] = control_points
+        return (((1 - t)**3)*p0[0] +
+                3*t*((1-t)**2)*p1[0] +
+                3*(t**2)*(1-t)*p2[0] +
+                (t**3)*p3[0])
+
+    def y_t(self, control_points, t):
+        [p0, p1, p2, p3] = control_points
+        return (((1 - t)**3)*p0[1] +
+                3*t*((1-t)**2)*p1[1] +
+                3*(t**2)*(1-t)*p2[1] +
+                (t**3)*p3[1])
 
     def _get_curve_index(self, times, time):
         for i in range(len(times)-1):
@@ -88,5 +123,5 @@ class AngleInterpolationAgent(PIDAgent):
 
 if __name__ == '__main__':
     agent = AngleInterpolationAgent()
-    agent.keyframes = leftBellyToStand()
+    agent.keyframes = hello()
     agent.run()
