@@ -47,6 +47,7 @@ class AngleInterpolationAgent(PIDAgent):
         target_joints = {}
         # YOUR CODE HERE
         current_time = self.perception.time - self.time_created
+        print str(current_time)
         (names, times, keys) = keyframes
         current_time = self.perception.time - self.time_created
         for index, name in enumerate(names):
@@ -69,39 +70,45 @@ class AngleInterpolationAgent(PIDAgent):
         #print 'curve index is: ' + str(ci)
         (t0, [ang0, [_, dt0, dAng0], [_, dt1, dAng1]]) = points[ci]
         (t1, [ang1, [_, dt2, dAng2], [_, dt3, dAng3]]) = points[ci+1]
-        p0 = np.array([t0, ang0])
-        p1 = np.array([t0+dt1, ang0+dAng1])
-        p2 = np.array([t1+dt2, ang1+dAng2])
-        p3 = np.array([t1, ang1])
+        p0 = [t0, ang0]
+        p1 = [t0+dt1, ang0+dAng1]
+        p2 = [t1+dt2, ang1+dAng2]
+        p3 = [t1, ang1]
         relative_t = (time - t0)/(t1-t0) * t1
 #        print str(relative_t)
         control_points = [p0, p1, p2, p3]
 
-        t = self.t_from_x(control_points, relative_t)
+        t = self.t_from_x(control_points, time)
         
-        print str(t)
+        #print str(t)
         #bezier = ((1-t)**3)*p0 + \
         #         3*t*((1-t)**2)*p1 + \
         #         3*(t**2)*(1-t)*p2 + \
         #         (t**3)*p3
         return self.y_t(control_points, t) 
 
-    def t_from_x(self, control_points, x):
+    def t_from_x(self, control_points, target_x):
         [p0, p1, p2, p3] = control_points
-        current_t = 0.5
 
-        while True:
-            new_x = self.x_t(control_points, current_t)
-#            print 'x: ' + str(x) + ', new x: ' + str(new_x) + 't: ' + str(current_t)
-            if (abs(x - new_x) < 0.03) or current_t == 0:
-                return current_t
+        x_tolerance = 0.0001
+        lower = 0
+        upper = 1
+        percent = (upper + lower) / 2.
+        x = self.x_t(control_points, percent)
+
+        while abs(target_x - x) > x_tolerance:
+            #if percent != 0:
+                #print ('percent: ' + str(percent) + ', error: '
+                       #+ str(abs(target_x - x)) + ', x = ' + str(x) + ', target_x = ' + str(target_x))
+            if target_x > x:
+                lower = percent
             else:
-                if x > new_x:
-                    current_t = (current_t + 1.)/2.
-                else:
-                    current_t /= 2.
-                continue
-
+                upper = percent
+            percent = (upper + lower) / 2.
+            x = self.x_t(control_points, percent)
+        #print 'Beated the tolerance'
+        return percent
+            
     def x_t(self, control_points, t):
         [p0, p1, p2, p3] = control_points
         return (((1 - t)**3)*p0[0] +
