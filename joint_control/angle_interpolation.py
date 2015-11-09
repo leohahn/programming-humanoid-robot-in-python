@@ -45,9 +45,7 @@ class AngleInterpolationAgent(PIDAgent):
 
     def angle_interpolation(self, keyframes, perception):
         target_joints = {}
-        # YOUR CODE HERE
         current_time = self.perception.time - self.time_created
-        print str(current_time)
         (names, times, keys) = keyframes
         current_time = self.perception.time - self.time_created
         for index, name in enumerate(names):
@@ -65,9 +63,8 @@ class AngleInterpolationAgent(PIDAgent):
             return None
 
         times = [i for (i, _) in points]
-        ci = self._get_curve_index(times, time)
+        ci = self.get_curve_index(times, time)
 
-        #print 'curve index is: ' + str(ci)
         (t0, [ang0, [_, dt0, dAng0], [_, dt1, dAng1]]) = points[ci]
         (t1, [ang1, [_, dt2, dAng2], [_, dt3, dAng3]]) = points[ci+1]
         p0 = [t0, ang0]
@@ -75,16 +72,9 @@ class AngleInterpolationAgent(PIDAgent):
         p2 = [t1+dt2, ang1+dAng2]
         p3 = [t1, ang1]
         relative_t = (time - t0)/(t1-t0) * t1
-#        print str(relative_t)
         control_points = [p0, p1, p2, p3]
-
         t = self.t_from_x(control_points, time)
         
-        #print str(t)
-        #bezier = ((1-t)**3)*p0 + \
-        #         3*t*((1-t)**2)*p1 + \
-        #         3*(t**2)*(1-t)*p2 + \
-        #         (t**3)*p3
         return self.y_t(control_points, t) 
 
     def t_from_x(self, control_points, target_x):
@@ -97,16 +87,12 @@ class AngleInterpolationAgent(PIDAgent):
         x = self.x_t(control_points, percent)
 
         while abs(target_x - x) > x_tolerance:
-            #if percent != 0:
-                #print ('percent: ' + str(percent) + ', error: '
-                       #+ str(abs(target_x - x)) + ', x = ' + str(x) + ', target_x = ' + str(target_x))
             if target_x > x:
                 lower = percent
             else:
                 upper = percent
             percent = (upper + lower) / 2.
             x = self.x_t(control_points, percent)
-        #print 'Beated the tolerance'
         return percent
             
     def x_t(self, control_points, t):
@@ -123,7 +109,7 @@ class AngleInterpolationAgent(PIDAgent):
                 3*(t**2)*(1-t)*p2[1] +
                 (t**3)*p3[1])
 
-    def _get_curve_index(self, times, time):
+    def get_curve_index(self, times, time):
         for i in range(len(times)-1):
             if (time >= times[i]) and (time <= times[i+1]) :
                 return i
