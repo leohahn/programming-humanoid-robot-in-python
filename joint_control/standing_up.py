@@ -16,14 +16,14 @@ class StandingUpAgent(PostureRecognitionAgent):
 
     def standing_up(self):
         posture = self.posture
-        print posture
         # YOUR CODE HERE
 #        if posture == 'StandInit':
 #            leftBellyToStand()
 
 
 class TestStandingUpAgent(StandingUpAgent):
-    '''this agent turns off all motor to falls down in fixed cycles
+    '''
+    this agent turns off all motor to falls down in fixed cycles
     '''
     def __init__(self, simspark_ip='localhost',
                  simspark_port=3100,
