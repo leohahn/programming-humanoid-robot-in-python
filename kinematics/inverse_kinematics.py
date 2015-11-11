@@ -16,7 +16,8 @@ from numpy.matlib import identity
 
 class InverseKinematicsAgent(ForwardKinematicsAgent):
     def inverse_kinematics(self, effector_name, transform):
-        '''solve the inverse kinematics
+        '''
+        solve the inverse kinematics
 
         :param str effector_name: name of end effector, e.g. LLeg, RLeg
         :param transform: 4x4 transform matrix
@@ -27,7 +28,8 @@ class InverseKinematicsAgent(ForwardKinematicsAgent):
         return joint_angles
 
     def set_transforms(self, effector_name, transform):
-        '''solve the inverse kinematics and control joints use the results
+        '''
+        solve the inverse kinematics and control joints use the results
         '''
         # YOUR CODE HERE
         self.keyframes = ([], [], [])  # the result joint angles have to fill in

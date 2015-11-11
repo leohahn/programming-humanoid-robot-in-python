@@ -1,4 +1,5 @@
-'''In this exercise you need to use the learned classifier to recognize current posture of robot
+'''
+In this exercise you need to use the learned classifier to recognize current posture of robot
 
 * Tasks:
     1. load learned classifier in `PostureRecognitionAgent.__init__`
@@ -60,6 +61,7 @@ class PostureRecognitionAgent(AngleInterpolationAgent):
                 data.append(perception.imu[1])
             else:
                 data.append(perception.joint[feature])
+        #print str(data)
         predicted = self.posture_classifier.predict(data)
         posture = INDEX_TO_NAMES[predicted[0]]
         return posture
