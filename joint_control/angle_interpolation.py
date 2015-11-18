@@ -110,6 +110,7 @@ class AngleInterpolationAgent(PIDAgent):
         p1 = [t0+dt1, ang0+dAng1]
         p2 = [t1+dt2, ang1+dAng2]
         p3 = [t1, ang1]
+
         control_points = [p0, p1, p2, p3]
         t = self.t_from_x(control_points, time)
         

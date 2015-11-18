@@ -41,6 +41,7 @@ class PostureRecognitionAgent(AngleInterpolationAgent):
                                                       sync_mode)
         self.posture = 'unknown'
         self.posture_classifier = pickle.load(open(ROBOT_POSE_CLF))
+<<<<<<< HEAD
         self.features = ['LHipYawPitch', 'LHipRoll', 'LHipPitch', 'LKneePitch',
                          'RHipYawPitch', 'RHipRoll', 'RHipPitch', 'RKneePitch',
                          'AngleX', 'AngleY']
