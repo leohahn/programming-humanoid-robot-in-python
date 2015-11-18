@@ -16,15 +16,22 @@ class StandingUpAgent(PostureRecognitionAgent):
 
     def standing_up(self):
         posture = self.posture
-        # YOUR CODE HERE
-#        if posture == 'StandInit':
-#            leftBellyToStand()
 
+        if posture == 'Belly':
+            self.set_keyframe('leftBellyToStand')
+        elif posture == 'Left':
+            self.set_keyframe('leftBackToStand')
+        elif posture == 'Right':
+            self.set_keyframe('rightBackToStand')
+        elif posture == 'Back':
+            self.set_keyframe('rightBackToStand')
+        elif posture == 'Frog':
+            self.set_keyframe('rightBackToStand')
+        elif posture == 'Sit':
+            self.set_keyframe('rightBackToStand')
 
 class TestStandingUpAgent(StandingUpAgent):
-    '''
-    this agent turns off all motor to falls down in fixed cycles
-    '''
+    '''This agent turns off all motor to falls down in fixed cycles'''
     def __init__(self, simspark_ip='localhost',
                  simspark_port=3100,
                  teamname='DAInamite',

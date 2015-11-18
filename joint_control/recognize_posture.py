@@ -41,32 +41,33 @@ class PostureRecognitionAgent(AngleInterpolationAgent):
                                                       sync_mode)
         self.posture = 'unknown'
         self.posture_classifier = pickle.load(open(ROBOT_POSE_CLF))
+        self.features = ['LHipYawPitch', 'LHipRoll', 'LHipPitch', 'LKneePitch',
+                         'RHipYawPitch', 'RHipRoll', 'RHipPitch', 'RKneePitch',
+                         'AngleX', 'AngleY']
 
     def think(self, perception):
         self.posture = self.recognize_posture(perception)
-        print self.posture
+        #print self.posture
         return super(PostureRecognitionAgent, self).think(perception)
 
     def recognize_posture(self, perception):
         posture = 'unknown'
         # YOUR CODE HERE
-        features = ['AngleX', 'AngleY', 'LHipYawPitch', 'LHipRoll',
-                    'LHipPitch', 'LKneePitch', 'RHipYawPitch', 'RHipRoll',
-                    'RHipPitch', 'RKneePitch']
         data = []
-        for feature in features:
+        
+        for feature in self.features:
             if feature == 'AngleX':
                 data.append(perception.imu[0])
             elif feature == 'AngleY':
                 data.append(perception.imu[1])
             else:
                 data.append(perception.joint[feature])
-        #print str(data)
+
         predicted = self.posture_classifier.predict(data)
         posture = INDEX_TO_NAMES[predicted[0]]
         return posture
 
 if __name__ == '__main__':
     agent = PostureRecognitionAgent()
-    agent.keyframes = leftBackToStand()  # CHANGE DIFFERENT KEYFRAMES
+    agent.set_keyframe('leftBackToStand')  # CHANGE DIFFERENT KEYFRAMES
     agent.run()

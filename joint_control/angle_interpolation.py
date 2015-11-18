@@ -21,8 +21,11 @@
 
 
 from pid import PIDAgent
-from keyframes import * 
+import keyframes 
 import numpy as np
+import sys
+from os import listdir
+from matplotlib.cbook import flatten
 
 class AngleInterpolationAgent(PIDAgent):
     def __init__(self, simspark_ip='localhost',
@@ -36,27 +39,63 @@ class AngleInterpolationAgent(PIDAgent):
                                                       player_id,
                                                       sync_mode)
         self.keyframes = ([], [], [])
-        self.time_created = self.perception.time
-        
+        self.keyframe_name = None
+        self.keyframe_init = None
+        self.keyframe_end = None  # specify when the keyframe ends
+                                  # relative to self.keyframe_time
+        self.keyframe_time = None # specify the time on current keyframe
+
     def think(self, perception):
         target_joints = self.angle_interpolation(self.keyframes, perception)
         self.target_joints.update(target_joints)
         return super(AngleInterpolationAgent, self).think(perception)
 
+    def set_keyframe(self, name):
+        if self.keyframe_name == name:
+            return 
+        
+        keyframe_names = [s for s in listdir('keyframes')
+                          if (s.endswith('py')
+                              and s != '__init__.py')]
+        if keyframe_names.count(name + '.py') == 0:
+            print "error: keyframe not found"
+            sys.exit(1) 
+
+        keyframe_method = getattr(keyframes, name)
+        self.keyframes = keyframe_method()
+        self.keyframe_init = self.perception.time
+        self.keyframe_end = self.get_end_keyframe(self.keyframes)
+        self.keyframe_name = name
+
+    def get_end_keyframe(self, keyframe):
+        (_, times, _) = keyframe
+        return max(list(flatten(times)))
+
     def angle_interpolation(self, keyframes, perception):
         target_joints = {}
-        current_time = self.perception.time - self.time_created
         (names, times, keys) = keyframes
-        current_time = self.perception.time - self.time_created
+
+        if (len(times) == 0):
+            # the keyframe is empty, does not modify joint angles
+            self.keyframes = ([], [], [])
+            return {}
+        
+        self.keyframe_time = self.perception.time - self.keyframe_init
+        if (self.keyframe_time > self.keyframe_end):
+            # if keyframe is over, does not try to interpolate
+            self.keyframe_name = None
+            return {}
+
+        # proceeds to the actual interpolation
         for index, name in enumerate(names):
             points = zip(times[index], keys[index])
-            angle = self._get_angle(points, current_time)
+            angle = self.get_angle(points, self.keyframe_time)
             if angle != None and self.target_joints.has_key(name):
                 target_joints[name] = angle
 
         return target_joints
 
-    def _get_angle(self, points, time):
+    def get_angle(self, points, time):
         if time < points[0][0]:
             return None
         elif time > points[-1][0]:
@@ -71,7 +110,6 @@ class AngleInterpolationAgent(PIDAgent):
         p1 = [t0+dt1, ang0+dAng1]
         p2 = [t1+dt2, ang1+dAng2]
         p3 = [t1, ang1]
-        relative_t = (time - t0)/(t1-t0) * t1
         control_points = [p0, p1, p2, p3]
         t = self.t_from_x(control_points, time)
         
@@ -116,5 +154,5 @@ class AngleInterpolationAgent(PIDAgent):
 
 if __name__ == '__main__':
     agent = AngleInterpolationAgent()
-    agent.keyframes = hello()
+    agent.set_keyframe('hello')
     agent.run()
