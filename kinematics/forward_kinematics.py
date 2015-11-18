@@ -41,15 +41,27 @@ class ForwardKinematicsAgent(AngleInterpolationAgent):
 
         # chains defines the name of chain and joints of the chain
         self.chains = {'Head': ['HeadYaw', 'HeadPitch']
-                       'LArm': ['LShoulderRoll', 'LShoulderPitch',
-                                'LElbowRoll', 'LElbowYaw']
-                       'RArm': ['RShoulderRoll', 'RShoulderPitch',
-                                'RElbowRoll', 'RElbowYaw']
-                       'Pelvis': ['LHipYawPitch', 'RHipYawPitch']
-                       'LLeg': ['LHipPitch', 'LHipRoll', 'LKneePitch',
+                       'LArm': ['LShoulderPitch','LShoulderRoll', 
+                                'LElbowYaw', 'LElbowRoll']
+                       'RArm': ['RShoulderPitch', 'RShoulderRoll', 
+                                'RElbowYaw', 'RElbowRoll']
+                       'LLeg': ['LHipYawPitch', 'LHipRoll',
+                                'LHipPitch', 'LKneePitch',
                                 'LAnklePitch', 'LAnkleRoll']
-                       'RLeg': ['RHipPitch', 'RHipRoll', 'RKneePitch',
+                       'RLeg': ['RHipYawPitch', 'RHipRoll'
+                                'RHipPitch', 'RKneePitch',
                                 'RAnklePitch', 'RAnkleRoll']}
+        self.lengths = {'Head': [0.0, 0.0]
+                        'LArm': ['LShoulderPitch','LShoulderRoll', 
+                                 'LElbowYaw', 'LElbowRoll']
+                        'RArm': ['RShoulderPitch', 'RShoulderRoll', 
+                                 'RElbowYaw', 'RElbowRoll']
+                        'LLeg': ['LHipYawPitch', 'LHipRoll',
+                                 'LHipPitch', 'LKneePitch',
+                                 'LAnklePitch', 'LAnkleRoll']
+                        'RLeg': ['RHipYawPitch', 'RHipRoll'
+                                 'RHipPitch', 'RKneePitch',
+                                 'RAnklePitch', 'RAnkleRoll']}
 
     def think(self, perception):
         self.forward_kinematics(perception.joint)
@@ -63,15 +75,24 @@ class ForwardKinematicsAgent(AngleInterpolationAgent):
         :return: transformation
         :rtype: 4x4 matrix
         '''
-        Rx = matrix([[1., 0., 0.],
-                     [0., cos(joint_angle), -sin(joint_angle)],
-                     [0., sin(joint_angle), cos(joint_angle)]])
-        Ry = matrix([[cos(joint_angle), 0., sin(joint_angle)],
-                     [0., 1., 0.],
-                     [-sin(joint_angle), 0., cos(joint_angle)]])
-        Rz = matrix([[cos(joint_angle), sin(joint_angle), 0.],
-                     [-sin(joint_angle), cos(joint_angle), 0.],
-                     [0., 0., 1.]])
+        Rx = identity(4)
+        Ry = identity(4)
+        Rz = identity(4)
+        # Update matrices if necessary
+        if ("Roll" in joint_name):
+            Rx = matrix([[1., 0., 0.],
+                         [0., cos(joint_angle), -sin(joint_angle)],
+                         [0., sin(joint_angle), cos(joint_angle)]])
+
+        if ("Pitch" in joint_name):
+            Ry = matrix([[cos(joint_angle), 0., sin(joint_angle)], 
+                         [0., 1., 0.],
+                         [-sin(joint_angle), 0., cos(joint_angle)]])
+
+        if ("Yaw" in joint_name):
+            Rz = matrix([[cos(joint_angle), sin(joint_angle), 0.],
+                         [-sin(joint_angle), cos(joint_angle), 0.],
+                         [0., 0., 1.]])
 
         T = Rx*Ry*Rz
         return T
